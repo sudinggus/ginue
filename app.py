@@ -54,8 +54,29 @@ with st.sidebar:
 # --- 4. 메인 화면: 근무표 미리보기 및 교체 ---
 st.title("📅 실시간 근무표 시스템")
 
-if st.session_state.schedule_df is not None:
-    df = st.session_state.schedule_df
+    if st.session_state.schedule_df is not None:
+        df = st.session_state.schedule_df
+
+        # [추가] 엑셀처럼 예쁜 표를 만들기 위한 데이터 재구성 (Pivot)
+        # 행: 캠퍼스, 근무지 / 열: 날짜 / 값: 직원
+        pivot_df = df.pivot_table(
+            index=['캠퍼스', '근무지'],
+            columns='날짜',
+            values='직원',
+            aggfunc=lambda x: ", ".join(x)
+        ).fillna("") # 빈자리는 공백으로
+
+        # [디자인] CSS를 이용해 엑셀 느낌 내기
+        st.markdown("""
+            <style>
+                table { border-collapse: collapse !important; width: 100%; }
+                th { background-color: #F2F2F2 !important; color: black !important; font-weight: bold !important; border: 1px solid #333 !important; }
+                td { border: 1px solid #333 !important; }
+            </style>
+        """, unsafe_allow_html=True)
+
+        st.subheader("📊 주간 근무표 시각화")
+        st.table(pivot_df) # 수정된 피벗 테이블 출력
     
     # 교체 기능 UI
     with st.expander("🔄 1:1 근무자 교체 신청"):
@@ -85,4 +106,5 @@ if st.session_state.schedule_df is not None:
         st.table(day_df) # 코랩 스타일의 표 출력
 
 else:
+
     st.info("왼쪽 사이드바에서 파일을 업로드하고 근무표를 생성해주세요.")
